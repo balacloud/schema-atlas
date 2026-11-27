@@ -1,0 +1,3 @@
+[
+  {"from": "PG.public.payments", "fromCols": ["policy_no"], "to": "ORA.LEGACY.POLICIES", "toCols": ["POLICY_NO"], "note": "payments service stores the legacy policy number"}
+]
