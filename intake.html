@@ -1,0 +1,75 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Schema Atlas · Connect</title>
+<style>
+:root{--bg:#0a0f1e;--panel:#101830;--card:#131d38;--line:#22305a;--txt:#e8edf9;--mut:#8b9ac0;--acc:#7c9cff}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;font:15px/1.45 Inter,system-ui,sans-serif;color:var(--txt);background:radial-gradient(1000px 600px at 70% -10%,#1a2760 0%,var(--bg) 62%);display:grid;place-items:center;padding:20px}
+.wrap{width:100%;max-width:640px}.logo{font-weight:800;display:flex;gap:10px;align-items:center;margin-bottom:6px;font-size:18px}.logo i{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#7c9cff,#c084fc)}
+h1{font-size:28px;margin:10px 0 4px}.sub{color:var(--mut);margin-bottom:22px}
+.card{background:rgba(19,29,56,.85);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 20px 60px #0008}
+.steps{display:flex;gap:8px;margin-bottom:18px}.steps div{flex:1;height:4px;border-radius:4px;background:var(--line)}.steps div.on{background:var(--acc)}
+label{display:block;font-size:12px;letter-spacing:.5px;text-transform:uppercase;color:var(--mut);margin:16px 0 7px}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.tile{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:14px 6px;text-align:center;cursor:pointer;transition:.15s}
+.tile:hover{border-color:var(--acc)}.tile.on{border-color:var(--acc);background:#1d2c5e;box-shadow:0 0 0 3px #7c9cff33}.tile.off{opacity:.5}
+.tile b{display:block;font-size:22px}.tile span{font-size:12px}.tile small{display:block;color:var(--mut);font-size:10px;margin-top:2px}
+.field{position:relative}input[type=password],input[type=text]{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 90px 13px 14px;color:var(--txt);font:inherit;outline:none}
+input:focus{border-color:var(--acc);box-shadow:0 0 0 3px #7c9cff33}.mini{padding-right:14px!important}
+.eye{position:absolute;right:10px;top:9px;background:none;border:0;color:var(--mut);cursor:pointer;font-size:12px;padding:5px 8px}
+.det{margin-top:8px;font-size:13px;color:var(--mut);min-height:20px}.det b{color:#34d399}.det .w{color:#fbbf24}
+.btn{width:100%;margin-top:18px;padding:13px;border-radius:12px;border:1px solid var(--acc);background:linear-gradient(135deg,#4f6df5,#8b5cf6);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+.btn.sec{background:var(--panel);border-color:var(--line);margin-top:10px}.btn:disabled{opacity:.4;cursor:not-allowed}
+.chk{margin-top:16px;display:grid;gap:8px}.chk div{display:flex;gap:10px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px}
+.ok{color:#34d399}.bad{color:#f87171}.warn{color:#fbbf24}.note{font-size:12px;color:var(--mut);margin-top:14px;display:flex;gap:8px}
+.demo{background:#1a1640;border:1px dashed #6d5ccf;border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:13px;color:#c4b5fd}
+.demo summary{cursor:pointer}.demo code{background:#0b1224;padding:1px 6px;border-radius:5px;color:#e8edf9}
+</style></head><body><div class="wrap">
+<div class="logo"><i></i>Schema Atlas</div><h1>Connect a data source</h1><div class="sub">We read structure only (tables, keys, relationships). Never your rows.</div>
+<div class="card">
+<div class="demo"><label style="margin:0;display:flex;gap:8px;align-items:center;text-transform:none;letter-spacing:0;font-size:13px;color:#c4b5fd"><input type="checkbox" id="demo" checked> Demo mode (mock data, no database or server needed; serve this folder with python -m http.server)</label></div>
+<details class="demo"><summary>Scenarios to try in demo mode</summary><div style="margin-top:8px;line-height:1.9">
+Works: <code>oracle://u:p@db.corp:1521/SVC</code><br>Risky account: <code>postgresql://u:p@risky.corp/app</code><br>Blocked host: <code>oracle://u:p@evil.com:1521/S</code><br>Unreachable: <code>postgresql://u:p@down.corp/app</code><br>Unsupported: <code>mongodb://u:p@db/x</code></div></details>
+<div class="steps"><div class="on" id="s1"></div><div id="s2"></div><div id="s3"></div></div>
+<label>1 · Source type</label><div class="tiles" id="tiles"></div>
+<label>2 · Connection string (read-only account)</label>
+<div class="field"><input id="url" type="password" placeholder="oracle://user:password@host:1521/SERVICE" autocomplete="off" spellcheck="false"><button class="eye" id="eye">Show</button></div>
+<div class="det" id="det"></div><div id="extra"></div>
+<button class="btn sec" id="test">Test connection and check safety</button><div class="chk" id="chk"></div>
+<button class="btn" id="go" disabled>Extract structure and open Atlas</button>
+<div class="note"><span>🔒</span><span>Credentials are used for one request only and are never stored or logged. Queries run in a read-only session with a timeout.</span></div></div></div>
+<script>
+const SRC=[["oracle","Oracle","🏛️",1,""],["postgres","PostgreSQL","🐘",1,""],["graphql","GraphQL","◈",0,"coming next"],["mongodb","MongoDB","🍃",0,"sampled, later"]];
+const NAME=Object.fromEntries(SRC.map(s=>[s[0],s[1]]));
+const EX={oracle:"oracle://user:password@host:1521/SERVICE",postgres:"postgresql://user:password@host:5432/dbname",graphql:"https://api.example.com/graphql",mongodb:"mongodb://user:password@host:27017/db"};
+let type=null;const $=i=>document.getElementById(i),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const PFX=[["oracle://","oracle"],["postgresql://","postgres"],["postgres://","postgres"],["mongodb+srv://","mongodb"],["mongodb://","mongodb"]];
+function detect(u){u=u.trim().toLowerCase();for(const[p,t]of PFX)if(u.startsWith(p))return t;if(/^https?:\/\//.test(u)&&u.includes("graphql"))return"graphql";return null}
+const supported=k=>SRC.find(s=>s[0]==k)[3];
+function tiles(){$("tiles").innerHTML=SRC.map(([k,n,i,ok,s])=>`<div class="tile ${type==k?"on":""} ${ok?"":"off"}" data-k="${k}"><b>${i}</b><span>${n}</span><small>${s||"&nbsp;"}</small></div>`).join("");
+document.querySelectorAll(".tile").forEach(t=>t.onclick=()=>pick(t.dataset.k))}
+function pick(k){type=k;$("go").disabled=true;$("chk").innerHTML="";$("url").placeholder=EX[k];
+$("extra").innerHTML=k=="oracle"?'<label>Schema owner(s)</label><input type="text" class="mini" id="own" placeholder="LEGACY,BILLING">':k=="postgres"?'<label>Schema(s)</label><input type="text" class="mini" id="sch" value="public">':"";
+$("det").innerHTML=supported(k)?"":'<span class="w">Not supported yet. Oracle and PostgreSQL work today.</span>';tiles();steps(1)}
+const steps=n=>["s1","s2","s3"].forEach((id,i)=>$(id).classList.toggle("on",i<n));
+$("url").oninput=e=>{$("go").disabled=true;const d=detect(e.target.value);
+if(d){if(d!=type)pick(d);$("det").innerHTML=`<b>✓ Detected ${NAME[d]}</b>`+(supported(d)?"":' <span class="w">· not supported yet</span>')}else $("det").innerHTML=e.target.value?'<span class="w">Could not detect the type. Pick it above.</span>':"";steps(e.target.value?2:1)};
+$("eye").onclick=()=>{const i=$("url");i.type=i.type=="password"?"text":"password";$("eye").textContent=i.type=="password"?"Show":"Hide"};
+const body=()=>({url:$("url").value.trim(),type,owners:$("own")?.value||"",schemas:$("sch")?.value||"public"});
+async function mock(p,b){await sleep(450);const u=b.url.toLowerCase(),t=detect(u),host=(u.match(/@([^:\/]+)/)||[])[1]||"";
+if(!t)throw new Error("That does not look like a valid connection string.");if(!supported(t))throw new Error(`'${t}' is not supported yet. Supported now: Oracle and PostgreSQL.`);
+if(host.includes("evil"))throw new Error(`Host '${host}' is not on the allowed list (set ALLOWED_HOSTS).`);if(host.includes("down"))throw new Error("Could not connect: timeout expired");
+if(p=="/api/test"){const risky=host.includes("risky");return{type:t,reachable:true,tables_visible:t=="oracle"?1240:86,read_only:!risky,warnings:risky?["This account is a superuser.","This account has 14 INSERT/UPDATE/DELETE grants."]:[]}}
+let r;try{r=await fetch("sample_schema.json")}catch(e){r=null}
+if(!r||!r.ok)throw new Error("Could not load sample_schema.json. Serve this folder with: python -m http.server");return r.json()}
+async function api(p){const b=body();if($("demo").checked)return mock(p,b);let r;try{r=await fetch(p,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)})}catch(e){throw new Error("Cannot reach the Atlas server. Start it with: python server.py, or tick Demo mode.")}
+const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.detail||"Request failed");return j}
+const line=(c,t)=>`<div><span class="${c}">${c=="ok"?"✓":c=="bad"?"✕":"⚠"}</span><span>${t}</span></div>`;
+$("test").onclick=async()=>{if(!type||!$("url").value){$("chk").innerHTML=line("warn","Pick a source and enter a connection string first.");return}
+$("chk").innerHTML=line("warn","Testing…");$("go").disabled=true;$("test").disabled=true;
+try{const r=await api("/api/test");let h=line("ok","Connected to "+NAME[r.type])+line("ok",r.tables_visible+" tables visible to this account");
+h+=r.read_only?line("ok","Account looks read-only"):r.warnings.map(w=>line("warn",w)).join("")+line("warn","Atlas still uses a read-only session and only reads the catalog, but a safer account is recommended.");
+$("chk").innerHTML=h;$("go").disabled=false;steps(3)}catch(e){$("chk").innerHTML=line("bad",e.message)}$("test").disabled=false};
+$("go").onclick=async()=>{$("go").disabled=true;$("go").textContent="Extracting structure…";
+try{const m=await api("/api/extract");sessionStorage.setItem("schema",JSON.stringify(m));const demo=$("demo").checked,dest=demo?"schema_atlas.html":"/atlas";
+if(demo){const n=k=>m.edges.filter(e=>e.kind==k).length;$("chk").innerHTML=line("ok",`Extracted ${m.tables.length} objects (${m.tables.filter(t=>t.kind=="view").length} views)`)+line("ok",`${n("declared")} declared, ${n("inferred")} inferred, ${n("manual")} cross-DB, ${n("dependency")} view links`)+line("ok",`Fingerprint ${m.meta.fingerprint} · AI used: ${m.meta.ai_used}`);
+$("go").disabled=false;$("go").textContent="Open Atlas →";$("go").onclick=()=>location.href=dest}else location.href=dest}
+catch(e){$("chk").innerHTML=line("bad",e.message);$("go").disabled=false;$("go").textContent="Extract structure and open Atlas"}};
+tiles();
+</script></body></html>
