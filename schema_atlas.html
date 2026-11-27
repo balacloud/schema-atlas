@@ -1,0 +1,162 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Schema Atlas</title>
+<style>
+:root{--bg:#0a0f1e;--panel:#101830;--card:#131d38;--line:#22305a;--txt:#e8edf9;--mut:#8b9ac0;--acc:#7c9cff}
+*{box-sizing:border-box}html,body{height:100%}body{margin:0;font:14px/1.4 Inter,system-ui,-apple-system,sans-serif;background:radial-gradient(1200px 700px at 70% -10%,#16224a 0%,var(--bg) 60%);color:var(--txt)}
+button,input,select{font:inherit;color:inherit}
+.app{display:grid;grid-template-columns:270px 1fr 370px;grid-template-rows:56px 1fr;height:100vh}
+header{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:0 16px;border-bottom:1px solid var(--line);background:rgba(16,24,48,.7);backdrop-filter:blur(8px)}
+.logo{font-weight:800;display:flex;gap:8px;align-items:center;white-space:nowrap}.logo i{width:22px;height:22px;border-radius:7px;background:linear-gradient(135deg,#7c9cff,#c084fc);display:inline-block}
+.crumbs{display:flex;gap:8px;align-items:center;color:var(--mut);overflow:hidden;white-space:nowrap}.crumbs b{color:var(--txt)}.sp{flex:1}
+.chip{padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600;border:1px solid var(--line);color:var(--mut);white-space:nowrap}.chip.ok{color:#34d399;border-color:#14532d;background:#06281c}
+.btn{background:var(--card);border:1px solid var(--line);padding:6px 11px;border-radius:9px;cursor:pointer}.btn:hover{border-color:var(--acc)}.btn.on{background:#1d2c5e;border-color:var(--acc)}
+#left,#right{background:var(--panel);overflow:auto;padding:12px}#left{border-right:1px solid var(--line)}#right{border-left:1px solid var(--line)}
+.search{position:relative}.search input{width:100%;padding:10px 12px 10px 34px;border-radius:11px;background:var(--card);border:1px solid var(--line);outline:none}.search input:focus{border-color:var(--acc);box-shadow:0 0 0 3px #7c9cff33}
+.search:before{content:"⌕";position:absolute;left:11px;top:7px;font-size:18px;color:var(--mut)}.kbd{position:absolute;right:9px;top:9px;font-size:10px;border:1px solid var(--line);border-radius:5px;padding:1px 5px;color:var(--mut)}
+.grp{margin:14px 0 4px;font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--mut);display:flex;gap:6px;align-items:center}.dot{width:8px;height:8px;border-radius:50%}
+.row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer}.row:hover{background:#18244a}.row.on{background:#1d2c5e}.row small{margin-left:auto;color:var(--mut)}
+.tag{font-size:10px;font-weight:700;padding:1px 6px;border-radius:5px}.t-ORA{background:#3b2a05;color:#f59e0b}.t-PG{background:#06304a;color:#38bdf8}.t-view{background:#2e1a4d;color:#d8b4fe}
+#stage{position:relative;overflow:hidden}svg{width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+.tools{position:absolute;left:14px;top:12px;display:flex;gap:8px;flex-wrap:wrap;z-index:2;right:14px}
+.legend{position:absolute;left:14px;bottom:12px;display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mut);background:#0a0f1ecc;padding:8px 12px;border-radius:10px;border:1px solid var(--line)}
+.legend span:before{content:"";display:inline-block;width:22px;border-top:2px solid;vertical-align:middle;margin-right:6px}
+.l-d:before{border-color:#c7d2fe}.l-i:before{border-color:#fbbf24;border-top-style:dashed}.l-m:before{border-color:#2dd4bf;border-top-width:3px}.l-v:before{border-color:#c084fc;border-top-style:dotted;border-top-width:3px}
+.node{cursor:pointer;transition:opacity .15s}.node .bg{fill:var(--card);stroke-width:1.4}.node:hover .bg{stroke-width:2.4}.node.focus .bg{stroke-width:3;filter:drop-shadow(0 0 14px var(--glow))}
+.node.view .bg{stroke-dasharray:6 4;fill:#171532}.node.imp .bg{stroke:#f87171!important;stroke-width:3;stroke-dasharray:none}.node text{pointer-events:none}
+.t-name{font-weight:700;font-size:13px;fill:#fff}.t-sub{font-size:10px;fill:var(--mut)}.c-name{font-size:11.5px;fill:#dbe4ff}.c-type{font-size:10px;fill:var(--mut)}.c-bdg{font-size:8.5px;font-weight:800}
+.edge path{fill:none;stroke-width:1.8;transition:opacity .15s}.edge .hit{stroke:transparent;stroke-width:14}.edge text{font-size:10px;fill:#fff;display:none}
+.e-declared path.v{stroke:#c7d2fe}.e-inferred path.v{stroke:#fbbf24;stroke-dasharray:7 6}.e-manual path.v{stroke:#2dd4bf;stroke-width:2.6}.e-dependency path.v{stroke:#c084fc;stroke-dasharray:2 5;stroke-width:2.6;stroke-linecap:round}
+svg.hl .edge:not(.on){opacity:.08}svg.hl .node:not(.on){opacity:.28}.edge.on path.v{stroke-width:3.4}.edge.on text{display:block}
+.tabs{display:flex;gap:4px;background:var(--card);padding:4px;border-radius:11px;margin-bottom:12px;position:sticky;top:-12px;z-index:3}
+.tabs button{flex:1;border:0;background:none;padding:7px 2px;border-radius:8px;cursor:pointer;color:var(--mut);font-weight:600;font-size:12px}.tabs button.on{background:#25356e;color:#fff}
+h2{margin:0 0 4px;font-size:20px}.mut{color:var(--mut)}.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stat b{display:block;font-size:18px}.stat span{font-size:11px;color:var(--mut)}
+table{width:100%;border-collapse:collapse;font-size:12.5px}td{padding:6px 4px;border-bottom:1px solid #1b274c}tr:last-child td{border:0}
+.badge{font-size:10px;font-weight:700;padding:1px 6px;border-radius:5px;background:#25356e;margin-left:3px}.b-pk{background:#4a3a05;color:#fcd34d}.b-fk{background:#1e2b66;color:#a5b4fc}
+.rel{padding:9px;border-radius:10px;border:1px solid var(--line);margin-bottom:8px;cursor:pointer}.rel:hover{border-color:var(--acc)}.why{font-size:11.5px;color:var(--mut);margin-top:4px}
+pre{background:#080d1b;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:12px;overflow:auto;white-space:pre-wrap;margin:8px 0 0}
+select{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:7px;width:100%;margin-bottom:6px}
+.ai{border:1px dashed #6d5ccf;background:#171236}.ai h3{margin:0 0 4px;color:#c4b5fd}.fp{font-family:ui-monospace,monospace;font-size:11px}
+.lvl{display:flex;gap:6px;margin:6px 0}.lvl div{flex:1;text-align:center;background:#1a1522;border:1px solid #5b2330;border-radius:10px;padding:8px}.lvl b{display:block;font-size:20px;color:#fca5a5}.lvl span{font-size:10px;color:var(--mut)}
+@media(max-width:1000px){.app{display:flex;flex-direction:column;height:auto}#stage{height:62vh;order:1}#left{order:2;max-height:40vh}#right{order:3}header{height:auto;padding:10px 14px;flex-wrap:wrap}}
+</style></head><body>
+<div class="app">
+<header><div class="logo"><i></i>Schema Atlas</div><div class="crumbs"><button class="btn" id="back">←</button><span id="crumb"></span></div><div class="sp"></div>
+<a class="btn" href="intake.html" style="text-decoration:none">New connection</a>
+<label class="btn" style="cursor:pointer">Load schema.json<input type="file" id="file" accept=".json" hidden></label>
+<span class="chip ok" title="Every fact on screen comes from catalog queries. AI is optional and only on the AI tab.">● deterministic</span><span class="chip fp" id="fp"></span></header>
+<div id="left"><div class="search"><input id="q" placeholder="Search tables, columns, notes" autocomplete="off"><span class="kbd">/</span></div><div id="list"></div></div>
+<div id="stage"><div class="tools">
+<button class="btn" data-h="1">1 hop</button><button class="btn" data-h="2">2 hops</button><button class="btn" data-h="3">3 hops</button>
+<button class="btn on" data-k="declared">Declared</button><button class="btn on" data-k="inferred">Inferred</button><button class="btn on" data-k="manual">Cross-DB</button><button class="btn on" data-k="dependency">Views</button><button class="btn" id="fit">Fit</button></div>
+<svg id="svg"><defs>
+<marker id="many" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7"><circle cx="5" cy="5" r="3.5" fill="#fff"/></marker>
+<marker id="one" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7"><rect x="4" y="0" width="2.4" height="10" fill="#fff"/></marker></defs><g id="vp"></g></svg>
+<div class="legend"><span class="l-d">Declared FK</span><span class="l-i">Inferred</span><span class="l-m">Cross-DB</span><span class="l-v">View reads from</span><span>Dashed card = view</span></div></div>
+<div id="right"><div class="tabs" id="tabs"></div><div id="panel"></div></div></div>
+<script>
+let DATA=null,T={},E=[];
+const DOM={Customer:"#60a5fa",Policy:"#a78bfa",Claims:"#fb7185",Billing:"#34d399",Reference:"#fbbf24",Digital:"#22d3ee",Other:"#94a3b8"};
+const $=i=>document.getElementById(i),fmt=n=>n>=1e6?(n/1e6).toFixed(1)+"M":n>=1e3?(n/1e3).toFixed(1)+"k":""+n;
+const S={focus:"",hops:2,show:{declared:1,inferred:1,manual:1,dependency:1},hist:[],tab:"Overview",path:null,imp:null,vp:{x:0,y:0,k:1},q:""};
+const CW=250,GAP=110,RH=19,HH=44;
+function load(d){DATA=d;T={};d.tables.forEach(t=>T[t.id]=t);E=d.edges;const best=d.tables.map(t=>[t,d.edges.filter(e=>e.from==t.id||e.to==t.id).length]).sort((a,b)=>b[1]-a[1])[0];S.focus=best?best[0].id:"";
+S.path=null;S.imp=null;S.hist=[];$("fp").textContent="schema #"+d.meta.fingerprint;render()}
+const colsFor=(t,drawn)=>{const used=new Set();drawn.forEach(e=>{if(e.from==t.id)e.fromCols.forEach(c=>used.add(c));if(e.to==t.id)e.toCols.forEach(c=>used.add(c))});
+let c=t.columns.filter(x=>x.pk||used.has(x.name));if(c.length<3)c=t.columns.slice(0,3);return c.slice(0,7)};
+function layout(){const ve=E.filter(e=>S.show[e.kind]),adj={};
+ve.forEach(e=>{(adj[e.from]=adj[e.from]||[]).push([e.to,-1]);(adj[e.to]=adj[e.to]||[]).push([e.from,1])});
+const key={};
+if(S.path){S.path.nodes.forEach((n,i)=>key[n]=i-(S.path.nodes.length-1)/2)}
+else{const dist={[S.focus]:0},side={[S.focus]:0},q=[S.focus];
+while(q.length){const c=q.shift();if(dist[c]>=S.hops)continue;(adj[c]||[]).forEach(([n,d])=>{if(!(n in dist)){dist[n]=dist[c]+1;side[n]=c==S.focus?d:side[c];q.push(n)}})}
+Object.keys(dist).forEach(n=>key[n]=dist[n]==0?0:side[n]*dist[n])}
+const ids=Object.keys(key),drawn=ve.filter(e=>e.from in key&&e.to in key),cm={};ids.forEach(i=>{(cm[key[i]]=cm[key[i]]||[]).push(i)});
+const pos={};Object.entries(cm).forEach(([k,list])=>{list.sort((a,b)=>T[a].domain.localeCompare(T[b].domain)||T[a].name.localeCompare(T[b].name));
+const hs=list.map(i=>HH+colsFor(T[i],drawn).length*RH+10),tot=hs.reduce((a,b)=>a+b,0)+(list.length-1)*18;let y=-tot/2;
+list.forEach((i,j)=>{pos[i]={x:k*(CW+GAP),y,w:CW,h:hs[j],cols:colsFor(T[i],drawn)};y+=hs[j]+18})});return{pos,drawn}}
+function anchor(p,col,side){const i=p.cols.findIndex(c=>c.name==col);return[side>0?p.x+p.w:p.x,p.y+(i>=0?HH+i*RH+RH/2:HH/2)]}
+function edgePath(pa,pb,e){let sa,sb;const same=Math.abs(pa.x-pb.x)<5;if(same){sa=1;sb=1}else if(pa.x<pb.x){sa=1;sb=-1}else{sa=-1;sb=1}
+const[x1,y1]=anchor(pa,e.fromCols[0],sa),[x2,y2]=anchor(pb,e.toCols[0],sb),dx=same?80:Math.max(50,Math.abs(x2-x1)/2);
+return{d:`M${x1},${y1} C${x1+sa*dx},${y1} ${x2+sb*dx},${y2} ${x2},${y2}`,mx:(x1+x2)/2+(same?60:0),my:(y1+y2)/2}}
+const lbl=e=>e.kind=="dependency"?"reads from":e.fromCols.join(",")+" → "+e.toCols.join(",")+(e.kind=="inferred"?" · "+e.confidence+"%":"");
+function render(){if(!S.focus)return;const{pos,drawn}=layout();let s="";
+drawn.forEach(e=>{const p=edgePath(pos[e.from],pos[e.to],e),m=e.kind=="dependency"?"":'marker-start="url(#many)" marker-end="url(#one)"';
+s+=`<g class="edge e-${e.kind}" data-a="${e.from}" data-b="${e.to}"><path class="v" d="${p.d}" ${m}/><path class="hit" d="${p.d}"/><text x="${p.mx}" y="${p.my-6}" text-anchor="middle" stroke="#0a0f1e" stroke-width="4" paint-order="stroke">${lbl(e)}</text></g>`});
+Object.entries(pos).forEach(([id,p])=>{const t=T[id],c=DOM[t.domain]||DOM.Other,v=t.kind=="view",cls=["node",v?"view":"",id==S.focus?"focus":"",S.imp&&S.imp.has(id)?"imp":""].join(" ");
+s+=`<g class="${cls}" data-id="${id}" transform="translate(${p.x},${p.y})" style="--glow:${c}88"><rect class="bg" width="${p.w}" height="${p.h}" rx="14" stroke="${c}"/>
+<rect width="${p.w}" height="${HH-4}" rx="14" fill="${c}" opacity=".16"/><text class="t-name" x="14" y="20">${v?"◧ ":""}${t.name}</text>
+<text class="t-sub" x="14" y="35">${t.db=="ORA"?"Oracle":"Postgres"} · ${t.schema} · ${v?"view":fmt(t.rows)+" rows"}</text>
+<rect x="${p.w-(v?58:44)}" y="9" width="${v?46:32}" height="16" rx="5" fill="${v?"#2e1a4d":t.db=="ORA"?"#3b2a05":"#06304a"}"/><text x="${p.w-(v?35:28)}" y="21" text-anchor="middle" class="c-bdg" fill="${v?"#d8b4fe":t.db=="ORA"?"#f59e0b":"#38bdf8"}">${v?"VIEW":t.db}</text>`;
+p.cols.forEach((col,i)=>{const y=HH+i*RH+13;s+=`<text class="c-name" x="14" y="${y}">${col.pk?"🔑 ":""}${col.name}</text><text class="c-type" x="${p.w-12}" y="${y}" text-anchor="end">${col.type.toLowerCase()}</text>`});
+if(t.columns.length>p.cols.length)s+=`<text class="c-type" x="14" y="${p.h-4}">+${t.columns.length-p.cols.length} more columns</text>`;s+="</g>"});
+$("vp").innerHTML=s;wire();fit(pos);$("crumb").innerHTML=S.path?`Path · <b>${S.path.nodes.map(n=>T[n].name).join(" → ")}</b>`:S.imp?`Impact of <b>${T[S.focus].name}</b>`:`<b>${T[S.focus].name}</b> · ${S.hops} hop${S.hops>1?"s":""}`;
+renderList();renderPanel();document.querySelectorAll("[data-h]").forEach(b=>b.classList.toggle("on",+b.dataset.h==S.hops&&!S.path))}
+function wire(){const svg=$("svg");
+document.querySelectorAll(".node").forEach(n=>{n.onclick=()=>go(n.dataset.id);n.onmouseenter=()=>hl(n.dataset.id);n.onmouseleave=un});
+document.querySelectorAll(".edge").forEach(e=>{e.onmouseenter=()=>{svg.classList.add("hl");e.classList.add("on");[e.dataset.a,e.dataset.b].forEach(i=>document.querySelector(`.node[data-id="${i}"]`).classList.add("on"))};e.onmouseleave=un})}
+function hl(id){$("svg").classList.add("hl");document.querySelector(`.node[data-id="${id}"]`).classList.add("on");
+document.querySelectorAll(".edge").forEach(e=>{if(e.dataset.a==id||e.dataset.b==id){e.classList.add("on");[e.dataset.a,e.dataset.b].forEach(i=>document.querySelector(`.node[data-id="${i}"]`).classList.add("on"))}})}
+function un(){$("svg").classList.remove("hl");document.querySelectorAll(".node.on,.edge.on").forEach(x=>x.classList.remove("on"))}
+function go(id){if(id!=S.focus||S.path||S.imp)S.hist.push(S.focus);S.focus=id;S.path=null;S.imp=null;S.tab=S.tab=="Path"?"Path":"Overview";render()}
+function fit(pos){const v=Object.values(pos);if(!v.length)return;const x0=Math.min(...v.map(p=>p.x))-30,x1=Math.max(...v.map(p=>p.x+p.w))+30,y0=Math.min(...v.map(p=>p.y))-70,y1=Math.max(...v.map(p=>p.y+p.h))+70;
+const W=$("svg").clientWidth,H=$("svg").clientHeight,k=Math.min(W/(x1-x0),H/(y1-y0),1.15);S.vp={k,x:W/2-k*(x0+x1)/2,y:H/2-k*(y0+y1)/2};applyVP()}
+const applyVP=()=>$("vp").setAttribute("transform",`translate(${S.vp.x},${S.vp.y}) scale(${S.vp.k})`);
+(function(){const svg=$("svg");let drag=null;
+svg.addEventListener("pointerdown",e=>{if(e.target.closest(".node"))return;drag={x:e.clientX,y:e.clientY,ox:S.vp.x,oy:S.vp.y};svg.setPointerCapture(e.pointerId)});
+svg.addEventListener("pointermove",e=>{if(!drag)return;S.vp.x=drag.ox+e.clientX-drag.x;S.vp.y=drag.oy+e.clientY-drag.y;applyVP()});svg.addEventListener("pointerup",()=>drag=null);
+svg.addEventListener("wheel",e=>{e.preventDefault();const r=svg.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top,k=Math.min(2.5,Math.max(.15,S.vp.k*(e.deltaY<0?1.1:.9)));
+S.vp.x=mx-(mx-S.vp.x)*k/S.vp.k;S.vp.y=my-(my-S.vp.y)*k/S.vp.k;S.vp.k=k;applyVP()},{passive:false})})();
+function renderList(){const q=S.q.toLowerCase(),by={};
+Object.values(T).forEach(t=>{if(!q||t.name.toLowerCase().includes(q)||t.comment.toLowerCase().includes(q)||t.columns.some(c=>c.name.toLowerCase().includes(q)))(by[t.domain]=by[t.domain]||[]).push(t)});
+$("list").innerHTML=Object.keys(by).sort().map(d=>`<div class="grp"><span class="dot" style="background:${DOM[d]||DOM.Other}"></span>${d}</div>`+by[d].sort((a,b)=>a.name.localeCompare(b.name)).map(t=>{
+const m=q&&!t.name.toLowerCase().includes(q)?t.columns.find(c=>c.name.toLowerCase().includes(q)):null;
+return`<div class="row ${t.id==S.focus?"on":""}" data-id="${t.id}"><span>${t.kind=="view"?"◧ ":""}${t.name}${m?`<br><small style="margin:0">col: ${m.name}</small>`:""}</span><small class="tag ${t.kind=="view"?"t-view":"t-"+t.db}">${t.kind=="view"?"VIEW":t.db}</small></div>`}).join("")).join("");
+document.querySelectorAll(".row").forEach(r=>r.onclick=()=>go(r.dataset.id))}
+const TABS=["Overview","Columns","Links","Impact","Path","AI"];
+const relOf=id=>({out:E.filter(e=>e.from==id),inn:E.filter(e=>e.to==id)});
+function impact(id){const dist={[id]:0},q=[id];while(q.length){const c=q.shift();E.forEach(e=>{if(e.to==c&&!(e.from in dist)){dist[e.from]=dist[c]+1;q.push(e.from)}})}return dist}
+function renderPanel(){$("tabs").innerHTML=TABS.map(t=>`<button class="${t==S.tab?"on":""}" data-t="${t}">${t}</button>`).join("");
+document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{S.tab=b.dataset.t;renderPanel()});
+const t=T[S.focus],{out,inn}=relOf(t.id),el=$("panel"),v=t.kind=="view";let h="";
+if(S.tab=="Overview"){const sq=t.sequence_details||[];h=`<h2>${t.name}</h2><div class="mut" style="margin-bottom:10px"><span class="tag ${v?"t-view":"t-"+t.db}">${v?"VIEW":t.db}</span> ${t.schema} · <span style="color:${DOM[t.domain]||DOM.Other}">● ${t.domain}</span></div>
+<div class="card">${t.comment?t.comment:'<span class="mut">No comment stored in the database.</span>'}<div class="why">Source: database comment</div></div>
+<div class="stats"><div class="card stat"><b>${v?"—":fmt(t.rows)}</b><span>rows (catalog estimate)</span></div><div class="card stat"><b>${t.columns.length}</b><span>columns</span></div>
+<div class="card stat"><b>${out.length}</b><span>${v?"objects it reads":"tables it references"}</span></div><div class="card stat"><b>${inn.length}</b><span>objects pointing at it</span></div></div>
+<div class="card"><b>Primary key</b><div class="mut">${t.columns.filter(c=>c.pk).map(c=>c.name).join(", ")||"none"}</div>
+<b style="display:block;margin-top:8px">Sequences</b><div class="mut">${sq.map(s=>`${s.name}${s.via?` <span class="badge">${s.via}</span>`:""}`).join("<br>")||"none linked"}</div>
+<b style="display:block;margin-top:8px">Code that touches it</b><div class="mut">${(t.dependents||[]).map(d=>`${d.name} <span class="badge">${d.type}</span>`).join("<br>")||"none found"}</div></div>`}
+if(S.tab=="Columns"){const fk=new Set(out.flatMap(e=>e.fromCols));h=`<h2>Columns</h2><div class="card"><table>${t.columns.map(c=>`<tr><td>${c.name}${c.pk?'<span class="badge b-pk">PK</span>':""}${fk.has(c.name)?'<span class="badge b-fk">FK</span>':""}</td><td class="mut">${c.type.toLowerCase()}</td><td class="mut">${c.nullable?"null":"not null"}</td></tr>`).join("")}</table></div>`}
+if(S.tab=="Links"){const card=(e,o)=>{const x=o?e.to:e.from,dep=e.kind=="dependency";return`<div class="rel" data-id="${x}"><b>${T[x].name}</b> <span class="tag t-${T[x].db}">${T[x].db}</span> <span class="badge">${dep?"view":e.kind}${e.kind=="inferred"?" "+e.confidence+"%":""}</span>
+<div class="mut">${dep?(o?t.name+" reads from "+T[x].name:T[x].name+" reads from "+t.name):(o?t.name+"."+e.fromCols.join(",")+" → "+T[x].name+"."+e.toCols.join(","):T[x].name+"."+e.fromCols.join(",")+" → "+t.name+"."+e.toCols.join(","))}</div><div class="why">Why: ${e.reasons.join("; ")}</div></div>`};
+h=`<h2>Relationships</h2><div class="mut" style="margin-bottom:8px">Each link shows its evidence.</div><b>Points to (${out.length})</b><div style="margin:6px 0 12px">${out.map(e=>card(e,1)).join("")||'<span class="mut">none</span>'}</div><b>Pointed at by (${inn.length})</b><div style="margin-top:6px">${inn.map(e=>card(e,0)).join("")||'<span class="mut">none</span>'}</div>`}
+if(S.tab=="Impact"){const d=impact(t.id),ids=Object.keys(d).filter(i=>i!=t.id),by=[0,1,2,3].map(n=>ids.filter(i=>d[i]==n)),more=ids.filter(i=>d[i]>3);
+h=`<h2>Impact analysis</h2><div class="mut">If <b>${t.name}</b> changes, these may break. Found by following links backwards.</div>
+<div class="lvl"><div><b>${by[1].length}</b><span>direct</span></div><div><b>${by[2].length}</b><span>2 steps</span></div><div><b>${by[3].length+more.length}</b><span>3+ steps</span></div></div>
+<div class="card"><b>Tables and views</b>${ids.sort((a,b)=>d[a]-d[b]||T[a].name.localeCompare(T[b].name)).map(i=>`<div class="rel" data-id="${i}" style="margin:6px 0 0"><b>${T[i].name}</b> <span class="badge">${d[i]} step${d[i]>1?"s":""}</span> <span class="tag ${T[i].kind=="view"?"t-view":"t-"+T[i].db}">${T[i].kind=="view"?"VIEW":T[i].db}</span></div>`).join("")||'<div class="mut">Nothing depends on this.</div>'}</div>
+<div class="card"><b>Code that touches it</b><div class="mut">${(t.dependents||[]).map(x=>`${x.name} <span class="badge">${x.type}</span>`).join("<br>")||"none found"}</div><div class="why">Procedures, functions, packages and triggers from catalog dependencies.</div></div>
+<button class="btn" id="showimp" style="width:100%">Show impact on diagram</button>`}
+if(S.tab=="Path"){const o=Object.values(T).sort((a,b)=>a.name.localeCompare(b.name)).map(x=>`<option value="${x.id}">${x.name} (${x.db})</option>`).join("");
+h=`<h2>Join path</h2><div class="mut" style="margin-bottom:8px">Shortest route between two tables.</div><select id="pa">${o}</select><select id="pb">${o}</select><button class="btn" id="go" style="width:100%">Find path</button><div id="pr"></div>`}
+if(S.tab=="AI"){const facts=JSON.stringify({table:t.name,kind:t.kind,db:t.db,domain:t.domain,comment:t.comment,rows:t.rows,columns:t.columns.map(c=>c.name+":"+c.type+(c.pk?" PK":"")),points_to:out.map(e=>T[e.to].name),pointed_at_by:inn.map(e=>T[e.from].name),code:(t.dependents||[]).map(x=>x.type+" "+x.name)},null,1);
+h=`<div class="card ai"><h3>✨ AI explainer (optional)</h3><div class="mut">Reads only the extracted facts below. Never sees row data, never changes the diagram.</div></div><div class="card"><b>Exact input that would be sent</b><pre>${facts}</pre></div><button class="btn" disabled style="opacity:.5;width:100%">Explain this table (connect an LLM key)</button>`}
+el.innerHTML=h;document.querySelectorAll(".rel").forEach(r=>r.onclick=()=>go(r.dataset.id));
+if(S.tab=="Impact")$("showimp").onclick=()=>{const d=impact(t.id);S.imp=new Set(Object.keys(d));S.hops=3;S.path=null;const keep=S.tab;render();S.tab=keep;renderPanel()};
+if(S.tab=="Path"){$("pa").value=S.focus;$("go").onclick=doPath}}
+function doPath(){const a=$("pa").value,b=$("pb").value,adj={};E.filter(e=>S.show[e.kind]&&e.kind!="dependency").forEach(e=>{(adj[e.from]=adj[e.from]||[]).push([e.to,e]);(adj[e.to]=adj[e.to]||[]).push([e.from,e])});
+const prev={[a]:null},q=[a];while(q.length){const c=q.shift();if(c==b)break;(adj[c]||[]).forEach(([n,e])=>{if(!(n in prev)){prev[n]=[c,e];q.push(n)}})}
+if(!(b in prev)){$("pr").innerHTML='<div class="card mut" style="margin-top:8px">No join path with the current link types.</div>';return}
+const steps=[];let c=b;while(prev[c]){steps.unshift([prev[c][0],c,prev[c][1]]);c=prev[c][0]}
+const nodes=[a,...steps.map(s=>s[1])],dbs=new Set(nodes.map(n=>T[n].db));let sql=`SELECT *\nFROM ${T[a].name} t0`;
+steps.forEach((s,i)=>{const e=s[2],fw=s[0]==e.from,L=fw?e.fromCols:e.toCols,R=fw?e.toCols:e.fromCols;sql+=`\nJOIN ${T[s[1]].name} t${i+1} ON `+L.map((x,j)=>`t${i}.${x} = t${i+1}.${R[j]}`).join(" AND ")});
+$("pr").innerHTML=`<div class="card" style="margin-top:8px"><b>${nodes.map(n=>T[n].name).join(" → ")}</b>${dbs.size>1?'<div class="why">⚠ Crosses Oracle and Postgres, so one SQL statement cannot run this. Query each side and join in application code.</div>':""}<pre>${sql}</pre><button class="btn" id="show" style="margin-top:8px">Show on diagram</button></div>`;
+$("show").onclick=()=>{S.path={nodes};S.imp=null;S.focus=a;render();S.tab="Path";renderPanel()}}
+document.querySelectorAll("[data-h]").forEach(b=>b.onclick=()=>{S.hops=+b.dataset.h;S.path=null;S.imp=null;render()});
+document.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{S.show[b.dataset.k]=S.show[b.dataset.k]?0:1;b.classList.toggle("on");render()});
+$("fit").onclick=()=>fit(layout().pos);$("back").onclick=()=>{if(S.hist.length){S.focus=S.hist.pop();S.path=null;S.imp=null;render()}};
+$("q").oninput=e=>{S.q=e.target.value;renderList()};document.addEventListener("keydown",e=>{if(e.key=="/"&&document.activeElement.tagName!="INPUT"){e.preventDefault();$("q").focus()}});
+$("file").onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(x=>{try{const d=JSON.parse(x);if(!d.tables||!d.edges)throw 0;load(d)}catch(_){alert("That file is not a valid schema.json")}})};
+window.addEventListener("resize",()=>{if(S.focus)fit(layout().pos)});
+let init=null;try{init=JSON.parse(sessionStorage.getItem("schema")||"null")}catch(_){}
+if(init)load(init);else fetch("sample_schema.json").then(r=>{if(!r.ok)throw 0;return r.json()}).then(d=>{load(d);if(T["ORA.LEGACY.POLICIES"]){S.focus="ORA.LEGACY.POLICIES";render()}}).catch(()=>{$("crumb").textContent="Could not load sample_schema.json. Serve this folder with python -m http.server, or click Load schema.json."});
+</script></body></html>
